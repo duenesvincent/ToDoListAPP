@@ -1,0 +1,22 @@
+
+
+CREATE TABLE IF NOT EXISTS Task (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    dueDate TEXT,
+    isCompleted INTEGER NOT NULL DEFAULT 0
+);
+
+selectAll:
+SELECT * FROM Task;
+
+
+deleteById:
+    DELETE FROM Task
+    WHERE id = ? ;
+
+
+insertTask:
+INSERT INTO Task (name, description, dueDate, isCompleted)
+VALUES (?, ?, ?, ?);
