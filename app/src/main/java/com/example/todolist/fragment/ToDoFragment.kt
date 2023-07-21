@@ -51,7 +51,7 @@ class ToDoFragment : Fragment(), TaskAdapter.TaskListener {
         binding.buttonDeleteTask.setOnClickListener {
             val checkedPositions = mutableListOf<Int>()
             //loop through task
-            for (i in tasks.indices) {
+            for (i in tasks.indices.reversed()) {
                 val task = tasks[i]
                 if (task.isCompleted) {
                     checkedPositions.add(i)
@@ -62,6 +62,7 @@ class ToDoFragment : Fragment(), TaskAdapter.TaskListener {
                     deleteTask(position)
                 }
                 taskAdapter.notifyDataSetChanged()
+                taskAdapter.selectedTaskPosition = RecyclerView.NO_POSITION // clear selected position
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -109,15 +110,32 @@ class ToDoFragment : Fragment(), TaskAdapter.TaskListener {
 
     //marks task as complete
     private fun taskComplete() {
-        //checks if valid position making sure an item is clicked
-        if (taskAdapter.selectedTaskPosition != RecyclerView.NO_POSITION) {
-            //get the checked task
-            val selectedTask = tasks[taskAdapter.selectedTaskPosition]
+
+        val previousCompletedPosition = taskAdapter.selectedTaskPosition
+
+        val currentSelectedPosition = taskAdapter.selectedTaskPosition
+
+        if (previousCompletedPosition != RecyclerView.NO_POSITION && previousCompletedPosition != currentSelectedPosition) {
+            // Get the previously completed task
+            val previousCompletedTask = tasks[previousCompletedPosition]
+
+            // Uncheck the previously completed task
+            previousCompletedTask.isCompleted = false
+
+            // Notify the adapter to update the item
+            taskAdapter.notifyItemChanged(previousCompletedPosition)
+        }
+
+        // Check if a valid position is selected
+        if (currentSelectedPosition != RecyclerView.NO_POSITION) {
+            // Get the selected task
+            val selectedTask = tasks[currentSelectedPosition]
+
+            // Mark the selected task as completed
             selectedTask.isCompleted = true
 
-            taskAdapter.notifyDataSetChanged()
-
-
+            // Notify the adapter to update the item
+            taskAdapter.notifyItemChanged(currentSelectedPosition)
         }
     }
 
@@ -128,7 +146,7 @@ class ToDoFragment : Fragment(), TaskAdapter.TaskListener {
             dbHelper.deleteTaskById(deletedTask.id!!) // Update the database by deleting the task with its ID
             tasks.removeAt(position)
             taskAdapter.notifyItemRemoved(position)
-
+            updateSelectedTaskPosition(position)
         }
     }
 
@@ -142,6 +160,14 @@ class ToDoFragment : Fragment(), TaskAdapter.TaskListener {
         tasks.clear()
         tasks.addAll(dbHelper.selectAll())
         taskAdapter.notifyDataSetChanged()
+    }
+
+    private fun updateSelectedTaskPosition(deletedPosition: Int) {
+        if (taskAdapter.selectedTaskPosition == deletedPosition) {
+            taskAdapter.selectedTaskPosition = RecyclerView.NO_POSITION
+        } else if (taskAdapter.selectedTaskPosition > deletedPosition) {
+            taskAdapter.selectedTaskPosition--
+        }
     }
 
 
